@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ForeSightAI - Fire Detection & Prediction System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'inter': ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        'emergency-red': '#DC2626',
+                        'alert-orange': '#EA580C',
+                        'action-purple': '#7C3AED',
+                        'safe-green': '#059669',
+                        'caution-amber': '#D97706',
+                        'surface-gray': '#FAFAFA'
+                    }
+                }
+            }
+        };
+    </script>
+</head>
+<body class="font-inter bg-surface-gray min-h-screen">
+    <!-- @COMPONENT: AppHeader -->
+    <header class="bg-white shadow-lg border-b-2 border-emergency-red">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0 flex items-center">
+                        <i class="fas fa-fire text-emergency-red text-2xl mr-3"></i>
+                        <h1 class="text-xl font-bold text-gray-900">ForeSightAI</h1>
+                    </div>
+                    <div class="hidden md:block ml-6">
+                        <span class="text-sm text-gray-600">Emergency Fire Detection & Prediction System</span>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <div class="hidden md:flex items-center space-x-2">
+                        <div class="w-3 h-3 bg-safe-green rounded-full animate-pulse"></div>
+                        <span class="text-sm text-gray-600">ECMWF AI System Online</span>
+                    </div>
+                    <button class="bg-emergency-red text-white px-4 py-2 rounded-lg font-medium hover:bg-red-700 transition-colors">
+                        <i class="fas fa-exclamation-triangle mr-2"></i>
+                        Emergency Alert
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+    <!-- @END_COMPONENT: AppHeader -->
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+            <!-- @COMPONENT: ControlPanel -->
+            <div class="lg:col-span-1 space-y-6">
+                <!-- Fire Image Upload Section -->
+                <div class="bg-white rounded-xl shadow-lg p-6">
+                    <h2 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                        <i class="fas fa-upload text-action-purple mr-2"></i>
+                        Fire Detection Upload
+                    </h2>
+                    
+                    <!-- @FUNCTIONALITY: This upload area should accept images and process them through AI fire detection -->
+                    <div class="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-action-purple transition-colors cursor-pointer" data-implementation="FileUpload component with drag-and-drop">
+                        <i class="fas fa-cloud-upload-alt text-4xl text-gray-400 mb-4"></i>
+                        <p class="text-sm text-gray-600 mb-2">Drop fire image here or click to browse</p>
+                        <p class="text-xs text-gray-500">Supports JPG, PNG, WebP (Max 10MB)</p>
+                        <input type="file" class="hidden" accept="image/*" data-mock="true">
+                    </div>
+                    
+                    <div class="mt-4 space-y-2">
+                        <div class="flex justify-between text-sm">
+                            <span class="text-gray-600">AI Processing Status:</span>
+                            <span class="text-safe-green font-medium" data-bind="processingStatus">Ready</span>
+                        </div>
+                        <div class="flex justify-between text-sm">
+                            <span class="text-gray-600">Fire Detected:</span>
+                            <span class="text-emergency-red font-medium" data-bind="fireDetected">No</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Weather Analysis -->
+                <div class="bg-white rounded-xl shadow-lg p-6">
+                    <h2 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                        <i class="fas fa-cloud-sun text-alert-orange mr-2"></i>
+                        Weather Analysis
+                    </h2>
+                    
+                    <div class="space-y-4">
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="text-center p-3 bg-gray-50 rounded-lg">
+                                <i class="fas fa-wind text-2xl text-blue-500 mb-2"></i>
+                                <p class="text-xs text-gray-600">Wind Speed</p>
+                                <p class="text-lg font-semibold" data-bind="windSpeed">15 mph</p>
+                            </div>
+                            <div class="text-center p-3 bg-gray-50 rounded-lg">
+                                <i class="fas fa-compass text-2xl text-blue-500 mb-2"></i>
+                                <p class="text-xs text-gray-600">Direction</p>
+                                <p class="text-lg font-semibold" data-bind="windDirection">NW</p>
+                            </div>
+                        </div>
+                        
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="text-center p-3 bg-gray-50 rounded-lg">
+                                <i class="fas fa-thermometer-half text-2xl text-red-500 mb-2"></i>
+                                <p class="text-xs text-gray-600">Temperature</p>
+                                <p class="text-lg font-semibold" data-bind="temperature">85°F</p>
+                            </div>
+                            <div class="text-center p-3 bg-gray-50 rounded-lg">
+                                <i class="fas fa-tint text-2xl text-blue-500 mb-2"></i>
+                                <p class="text-xs text-gray-600">Humidity</p>
+                                <p class="text-lg font-semibold" data-bind="humidity">25%</p>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-caution-amber bg-opacity-10 border border-caution-amber rounded-lg p-3">
+                            <p class="text-sm text-amber-800 font-medium">
+                                <i class="fas fa-exclamation-triangle mr-2"></i>
+                                High Fire Risk Conditions Detected
+                            </p>
+                            <p class="text-xs text-amber-700 mt-1">
+                                Data from ECMWF AI Forecasting System
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Location & Risk Assessment -->
+                <div class="bg-white rounded-xl shadow-lg p-6">
+                    <h2 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                        <i class="fas fa-map-marker-alt text-emergency-red mr-2"></i>
+                        Location & Risk
+                    </h2>
+                    
+                    <div class="space-y-3">
+                        <div class="flex justify-between">
+                            <span class="text-sm text-gray-600">Current Location:</span>
+                            <span class="text-sm font-medium" data-bind="userLocation">37.7749, -122.4194</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-sm text-gray-600">Fire Risk Level:</span>
+                            <span class="text-sm font-medium text-emergency-red" data-bind="riskLevel">EXTREME</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-sm text-gray-600">Vegetation Type:</span>
+                            <span class="text-sm font-medium" data-bind="vegetationType">Mixed Forest</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-sm text-gray-600">Fuel Moisture:</span>
+                            <span class="text-sm font-medium text-emergency-red" data-bind="fuelMoisture">8% (Critical)</span>
+                        </div>
+                    </div>
+
+                    <button class="w-full mt-4 bg-action-purple text-white py-2 px-4 rounded-lg font-medium hover:bg-purple-700 transition-colors" data-event="click:updateLocation">
+                        <i class="fas fa-sync-alt mr-2"></i>
+                        Update Location
+                    </button>
+                </div>
+            </div>
+            <!-- @END_COMPONENT: ControlPanel -->
+
+            <!-- @COMPONENT: MapContainer -->
+            <div class="lg:col-span-3">
+                <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+                    <div class="bg-gray-900 text-white p-4 flex justify-between items-center">
+                        <h2 class="text-lg font-semibold flex items-center">
+                            <i class="fas fa-map text-action-purple mr-2"></i>
+                            Fire Spread Prediction Map
+                        </h2>
+                        <div class="flex items-center space-x-4">
+                            <div class="flex items-center space-x-2">
+                                <div class="w-3 h-3 bg-safe-green rounded-full"></div>
+                                <span class="text-sm">Google FireSat Active</span>
+                            </div>
+                            <select class="bg-gray-800 text-white text-sm rounded px-3 py-1 border border-gray-600">
+                                <option>Real-time</option>
+                                <option>1 Hour Prediction</option>
+                                <option>6 Hour Prediction</option>
+                                <option>24 Hour Prediction</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <!-- Map Interface -->
+                    <div class="relative h-96 bg-gray-100">
+                        <!-- Simulated forest landscape background for fire spread visualization -->
+                        <div 
+                            class="absolute inset-0 bg-cover bg-center"
+                            style="background-image: url('https://images.unsplash.com/photo-1441974231531-c6227db76b6e?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1200&h=600'); opacity: 0.7;"
+                        ></div>
+                        
+                        <!-- Map Overlays -->
+                        <div class="absolute inset-0">
+                            <!-- Current Fire Location -->
+                            <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+                                <div class="w-8 h-8 bg-emergency-red rounded-full animate-pulse flex items-center justify-center">
+                                    <i class="fas fa-fire text-white text-sm"></i>
+                                </div>
+                                <div class="absolute -bottom-6 left-1/2 transform -translate-x-1/2 whitespace-nowrap">
+                                    <span class="bg-black bg-opacity-75 text-white text-xs px-2 py-1 rounded">Current Fire</span>
+                                </div>
+                            </div>
+                            
+                            <!-- Fire Spread Prediction Zones -->
+                            <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+                                <!-- 1 Hour Spread -->
+                                <div class="w-20 h-20 bg-emergency-red bg-opacity-30 rounded-full border-2 border-emergency-red border-dashed animate-pulse" style="animation-delay: 0.5s;"></div>
+                                <!-- 6 Hour Spread -->
+                                <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-32 h-32 bg-alert-orange bg-opacity-20 rounded-full border-2 border-alert-orange border-dashed animate-pulse" style="animation-delay: 1s;"></div>
+                                <!-- 24 Hour Spread -->
+                                <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-48 h-48 bg-caution-amber bg-opacity-10 rounded-full border-2 border-caution-amber border-dashed animate-pulse" style="animation-delay: 1.5s;"></div>
+                            </div>
+                            
+                            <!-- Wind Direction Indicator -->
+                            <div class="absolute top-4 right-4 bg-white bg-opacity-90 rounded-lg p-3">
+                                <div class="flex items-center space-x-2">
+                                    <i class="fas fa-location-arrow text-blue-500 transform rotate-45"></i>
+                                    <div>
+                                        <p class="text-xs text-gray-600">Wind Direction</p>
+                                        <p class="text-sm font-semibold">NW 15mph</p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Emergency Zones -->
+                            <div class="absolute bottom-4 left-4 space-y-2">
+                                <div class="bg-white bg-opacity-90 rounded-lg p-2 text-xs">
+                                    <div class="flex items-center space-x-2">
+                                        <div class="w-3 h-3 bg-emergency-red rounded-full"></div>
+                                        <span>Immediate Evacuation Zone</span>
+                                    </div>
+                                </div>
+                                <div class="bg-white bg-opacity-90 rounded-lg p-2 text-xs">
+                                    <div class="flex items-center space-x-2">
+                                        <div class="w-3 h-3 bg-alert-orange rounded-full"></div>
+                                        <span>Prepare to Evacuate</span>
+                                    </div>
+                                </div>
+                                <div class="bg-white bg-opacity-90 rounded-lg p-2 text-xs">
+                                    <div class="flex items-center space-x-2">
+                                        <div class="w-3 h-3 bg-caution-amber rounded-full"></div>
+                                        <span>Monitor Conditions</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Map Controls -->
+                        <div class="absolute top-4 left-4 bg-white rounded-lg shadow-lg">
+                            <button class="p-3 hover:bg-gray-50 border-b border-gray-200">
+                                <i class="fas fa-plus text-gray-600"></i>
+                            </button>
+                            <button class="p-3 hover:bg-gray-50">
+                                <i class="fas fa-minus text-gray-600"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Map Legend and Stats -->
+                    <div class="bg-gray-50 p-4 border-t">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div class="text-center">
+                                <p class="text-2xl font-bold text-emergency-red" data-bind="affectedArea">1,247</p>
+                                <p class="text-sm text-gray-600">Acres at Risk (24h)</p>
+                            </div>
+                            <div class="text-center">
+                                <p class="text-2xl font-bold text-alert-orange" data-bind="evacuationZone">3.2</p>
+                                <p class="text-sm text-gray-600">Miles Evacuation Radius</p>
+                            </div>
+                            <div class="text-center">
+                                <p class="text-2xl font-bold text-action-purple" data-bind="confidenceLevel">94%</p>
+                                <p class="text-sm text-gray-600">AI Prediction Confidence</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- @END_COMPONENT: MapContainer -->
+        </div>
+
+        <!-- @COMPONENT: EmergencyDashboard -->
+        <div class="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- Emergency Agency Notifications -->
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <h2 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                    <i class="fas fa-broadcast-tower text-emergency-red mr-2"></i>
+                    Emergency Agency Alerts
+                </h2>
+                
+                <div class="space-y-3">
+                    <!-- @MAP: agencies.map(agency => ( -->
+                    <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-3 h-3 bg-safe-green rounded-full"></div>
+                            <span class="text-sm font-medium" data-mock="true">Ministry of Home Affairs</span>
+                        </div>
+                        <span class="text-xs text-gray-500" data-bind="timestamp">12:34 PM</span>
+                    </div>
+                    
+                    <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-3 h-3 bg-safe-green rounded-full"></div>
+                            <span class="text-sm font-medium" data-mock="true">NDMA (National Disaster Management Authority)</span>
+                        </div>
+                        <span class="text-xs text-gray-500" data-bind="timestamp">12:34 PM</span>
+                    </div>
+                    
+                    <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-3 h-3 bg-safe-green rounded-full"></div>
+                            <span class="text-sm font-medium" data-mock="true">NDRF (National Disaster Response Force)</span>
+                        </div>
+                        <span class="text-xs text-gray-500" data-bind="timestamp">12:34 PM</span>
+                    </div>
+                    
+                    <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-3 h-3 bg-caution-amber rounded-full animate-pulse"></div>
+                            <span class="text-sm font-medium" data-mock="true">CISF (Central Industrial Security Force)</span>
+                        </div>
+                        <span class="text-xs text-gray-500" data-bind="timestamp">Sending...</span>
+                    </div>
+                    
+                    <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-3 h-3 bg-safe-green rounded-full"></div>
+                            <span class="text-sm font-medium" data-mock="true">Rashtriya Raksha University</span>
+                        </div>
+                        <span class="text-xs text-gray-500" data-bind="timestamp">12:35 PM</span>
+                    </div>
+                    
+                    <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-3 h-3 bg-safe-green rounded-full"></div>
+                            <span class="text-sm font-medium" data-mock="true">International Maritime Organisation</span>
+                        </div>
+                        <span class="text-xs text-gray-500" data-bind="timestamp">12:35 PM</span>
+                    </div>
+                    <!-- @END_MAP )) -->
+                </div>
+                
+                <div class="mt-4 p-3 bg-safe-green bg-opacity-10 border border-safe-green rounded-lg">
+                    <p class="text-sm text-green-800 font-medium flex items-center">
+                        <i class="fas fa-check-circle mr-2"></i>
+                        6 of 8 agencies notified successfully
+                    </p>
+                </div>
+            </div>
+            
+            <!-- AI System Status -->
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <h2 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                    <i class="fas fa-robot text-action-purple mr-2"></i>
+                    AI System Status
+                </h2>
+                
+                <div class="space-y-4">
+                    <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <div class="flex items-center space-x-3">
+                            <i class="fas fa-satellite text-blue-500"></i>
+                            <span class="text-sm font-medium">Google FireSat Constellation</span>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <div class="w-3 h-3 bg-safe-green rounded-full"></div>
+                            <span class="text-xs text-green-600">Online</span>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <div class="flex items-center space-x-3">
+                            <i class="fas fa-cloud text-blue-500"></i>
+                            <span class="text-sm font-medium">ECMWF AI Forecasting System</span>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <div class="w-3 h-3 bg-safe-green rounded-full"></div>
+                            <span class="text-xs text-green-600">Active</span>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <div class="flex items-center space-x-3">
+                            <i class="fas fa-eye text-blue-500"></i>
+                            <span class="text-sm font-medium">NOAA Next-Gen Fire System</span>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <div class="w-3 h-3 bg-safe-green rounded-full"></div>
+                            <span class="text-xs text-green-600">Monitoring</span>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <div class="flex items-center space-x-3">
+                            <i class="fas fa-brain text-blue-500"></i>
+                            <span class="text-sm font-medium">USC cWGAN Fire Prediction</span>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <div class="w-3 h-3 bg-safe-green rounded-full"></div>
+                            <span class="text-xs text-green-600">Processing</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mt-4 grid grid-cols-2 gap-4">
+                    <div class="text-center p-3 bg-blue-50 rounded-lg">
+                        <p class="text-lg font-bold text-blue-600" data-bind="processingSpeed">0.2s</p>
+                        <p class="text-xs text-blue-600">Avg Processing Time</p>
+                    </div>
+                    <div class="text-center p-3 bg-green-50 rounded-lg">
+                        <p class="text-lg font-bold text-green-600" data-bind="accuracy">96.8%</p>
+                        <p class="text-xs text-green-600">Detection Accuracy</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- @END_COMPONENT: EmergencyDashboard -->
+
+        <!-- @COMPONENT: RecentAlerts -->
+        <div class="mt-6">
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <h2 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                    <i class="fas fa-history text-gray-600 mr-2"></i>
+                    Recent Fire Alerts & Predictions
+                </h2>
+                
+                <div class="overflow-x-auto">
+                    <table class="min-w-full">
+                        <thead>
+                            <tr class="border-b border-gray-200">
+                                <th class="text-left py-3 px-4 font-medium text-gray-600">Time</th>
+                                <th class="text-left py-3 px-4 font-medium text-gray-600">Location</th>
+                                <th class="text-left py-3 px-4 font-medium text-gray-600">Risk Level</th>
+                                <th class="text-left py-3 px-4 font-medium text-gray-600">Confidence</th>
+                                <th class="text-left py-3 px-4 font-medium text-gray-600">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- @MAP: recentAlerts.map(alert => ( -->
+                            <tr class="border-b border-gray-100" data-mock="true">
+                                <td class="py-3 px-4 text-sm" data-bind="alert.timestamp">12:34 PM</td>
+                                <td class="py-3 px-4 text-sm" data-bind="alert.location">37.7749, -122.4194</td>
+                                <td class="py-3 px-4">
+                                    <span class="px-2 py-1 text-xs font-medium bg-emergency-red text-white rounded-full" data-bind="alert.riskLevel">EXTREME</span>
+                                </td>
+                                <td class="py-3 px-4 text-sm" data-bind="alert.confidence">94%</td>
+                                <td class="py-3 px-4">
+                                    <span class="px-2 py-1 text-xs font-medium bg-safe-green text-white rounded-full" data-bind="alert.status">NOTIFIED</span>
+                                </td>
+                            </tr>
+                            
+                            <tr class="border-b border-gray-100" data-mock="true">
+                                <td class="py-3 px-4 text-sm">11:58 AM</td>
+                                <td class="py-3 px-4 text-sm">37.7849, -122.4094</td>
+                                <td class="py-3 px-4">
+                                    <span class="px-2 py-1 text-xs font-medium bg-alert-orange text-white rounded-full">HIGH</span>
+                                </td>
+                                <td class="py-3 px-4 text-sm">87%</td>
+                                <td class="py-3 px-4">
+                                    <span class="px-2 py-1 text-xs font-medium bg-safe-green text-white rounded-full">RESOLVED</span>
+                                </td>
+                            </tr>
+                            
+                            <tr class="border-b border-gray-100" data-mock="true">
+                                <td class="py-3 px-4 text-sm">10:22 AM</td>
+                                <td class="py-3 px-4 text-sm">37.7649, -122.4294</td>
+                                <td class="py-3 px-4">
+                                    <span class="px-2 py-1 text-xs font-medium bg-caution-amber text-white rounded-full">MODERATE</span>
+                                </td>
+                                <td class="py-3 px-4 text-sm">78%</td>
+                                <td class="py-3 px-4">
+                                    <span class="px-2 py-1 text-xs font-medium bg-gray-500 text-white rounded-full">MONITORING</span>
+                                </td>
+                            </tr>
+                            <!-- @END_MAP )) -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <!-- @END_COMPONENT: RecentAlerts -->
+    </div>
+
+    <!-- @COMPONENT: FloatingActionButton -->
+    <div class="fixed bottom-6 right-6">
+        <button class="bg-emergency-red text-white w-14 h-14 rounded-full shadow-lg hover:bg-red-700 transition-all duration-300 transform hover:scale-110" data-event="click:emergencyCall">
+            <i class="fas fa-phone text-xl"></i>
+        </button>
+    </div>
+    <!-- @END_COMPONENT: FloatingActionButton -->
+
+    <script>
+        // TODO: Implement business logic, API calls, and state management
+        
+        (function() {
+            // Simulated real-time updates
+            function updateFireSpreadPrediction() {
+                // Mock fire spread animation and data updates
+                console.log('Updating fire spread prediction...');
+            }
+            
+            function simulateAIProcessing() {
+                // Mock AI processing workflow
+                console.log('Processing fire detection...');
+            }
+            
+            function notifyEmergencyAgencies() {
+                // Mock emergency notification system
+                console.log('Notifying emergency agencies...');
+            }
+            
+            // Initialize real-time monitoring
+            setInterval(updateFireSpreadPrediction, 30000); // Update every 30 seconds
+            
+            // Event handlers for file upload
+            document.addEventListener('change', function(e) {
+                if (e.target.type === 'file') {
+                    simulateAIProcessing();
+                }
+            });
+            
+            // Mock geolocation tracking
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(function(position) {
+                    console.log('User location:', position.coords.latitude, position.coords.longitude);
+                });
+            }
+        })();
+    </script>
+</body>
+</html>

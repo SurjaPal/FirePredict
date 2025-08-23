@@ -2,6 +2,7 @@ import type { Express, Request } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { insertFireDetectionSchema, insertWeatherDataSchema, insertEmergencyNotificationSchema } from "@shared/schema";
+import { detectFireInImage } from "./fireDetection";
 import multer from "multer";
 import { z } from "zod";
 
@@ -29,18 +30,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
         longitude: z.string().transform(Number),
       }).parse(req.body);
 
-      // Mock AI fire detection - in production this would call computer vision API
-      const mockFireDetected = Math.random() > 0.3; // 70% chance of fire detection
-      const confidence = mockFireDetected ? 0.85 + Math.random() * 0.15 : 0.1 + Math.random() * 0.3;
+      // Call the Python fire detection model
+      const fireDetectionResult = await detectFireInImage(req.file.buffer);
       
-      if (!mockFireDetected) {
+      if (!fireDetectionResult.isFireDetected) {
         return res.json({ 
           fireDetected: false, 
-          confidence: confidence,
+          confidence: fireDetectionResult.confidence * 100, // Convert to percentage
           message: "No fire detected in the uploaded image"
         });
       }
 
+      const confidence = fireDetectionResult.confidence * 100; // Convert to percentage
+      
       // Get weather data for fire spread prediction
       const weatherData = await getWeatherData(body.latitude, body.longitude);
       

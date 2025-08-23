@@ -3,21 +3,55 @@ import { apiRequest } from "./queryClient";
 export async function uploadFireImage(file: File, latitude: number, longitude: number) {
   const formData = new FormData();
   formData.append('image', file);
-  formData.append('latitude', latitude.toString());
-  formData.append('longitude', longitude.toString());
+  
+  console.log('Sending request to Flask server...');
+  
+  try {
+    // Send directly to Flask server
+    const response = await fetch('http://localhost:5000/detect', {
+      method: 'POST',
+      body: formData
+    });
 
-  const response = await fetch('/api/fire-detection', {
-    method: 'POST',
-    body: formData,
-    credentials: 'include',
-  });
+    console.log('Response status:', response.status);
+    const responseText = await response.text();
+    console.log('Raw response:', responseText);
 
-  if (!response.ok) {
-    const error = await response.text();
-    throw new Error(`Upload failed: ${error}`);
+    if (!response.ok) {
+      throw new Error(`Upload failed: ${responseText}`);
+    }
+
+    const result = JSON.parse(responseText);
+    
+    // Transform the response to match our frontend expectations
+    return {
+      fireDetected: result.is_fire,
+      confidence: result.confidence * 100, // Convert to percentage
+      detection: {
+        id: Date.now().toString(),
+        latitude,
+        longitude,
+        riskLevel: result.confidence > 0.8 ? 'HIGH' : result.confidence > 0.5 ? 'MEDIUM' : 'LOW',
+        detectedAt: new Date().toISOString()
+      }
+    };
+  } catch (error) {
+    console.error('Error in uploadFireImage:', error);
+    throw error;
   }
-
-  return response.json();
+  
+  // Transform the response to match our frontend expectations
+  return {
+    fireDetected: result.is_fire,
+    confidence: result.confidence * 100, // Convert to percentage
+    detection: {
+      id: Date.now().toString(),
+      latitude,
+      longitude,
+      riskLevel: result.confidence > 0.8 ? 'HIGH' : result.confidence > 0.5 ? 'MEDIUM' : 'LOW',
+      detectedAt: new Date().toISOString()
+    }
+  };
 }
 
 export async function getWeatherData(latitude: number, longitude: number) {

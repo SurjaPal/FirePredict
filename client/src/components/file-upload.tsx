@@ -1,15 +1,16 @@
 import { useState } from "react";
 import { Card, CardHeader, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { uploadFireImage } from "@/lib/api";
-import { FireDetectionResult } from "@/types";
 import { Upload, CloudUpload } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface FileUploadProps {
   userLocation: { lat: number; lng: number } | null;
-  onDetectionComplete: (result: FireDetectionResult) => void;
+  onDetectionComplete: (result: {
+    fireDetected: boolean;
+    confidence: number;
+    rawScore: number;
+  }) => void;
 }
 
 export function FileUpload({ userLocation, onDetectionComplete }: FileUploadProps) {
@@ -18,6 +19,7 @@ export function FileUpload({ userLocation, onDetectionComplete }: FileUploadProp
   const [processingProgress, setProcessingProgress] = useState(0);
   const [detectionStatus, setDetectionStatus] = useState<string>("Ready");
   const [fireDetected, setFireDetected] = useState<string>("No");
+  const [confidence, setConfidence] = useState<number | null>(null);
   const { toast } = useToast();
 
   const handleFileSelect = async (file: File) => {
@@ -30,7 +32,7 @@ export function FileUpload({ userLocation, onDetectionComplete }: FileUploadProp
       return;
     }
 
-    if (!file.type.startsWith('image/')) {
+    if (!file.type.startsWith("image/")) {
       toast({
         title: "Invalid File Type",
         description: "Please upload an image file (JPG, PNG, WebP).",
@@ -54,27 +56,29 @@ export function FileUpload({ userLocation, onDetectionComplete }: FileUploadProp
     setProcessingProgress(0);
 
     try {
-      // Simulate AI processing with progress updates
-      const progressInterval = setInterval(() => {
-        setProcessingProgress(prev => {
-          if (prev >= 90) {
-            clearInterval(progressInterval);
-            return prev;
-          }
-          return prev + 10;
-        });
-      }, 200);
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("lat", userLocation.lat.toString());
+      formData.append("lng", userLocation.lng.toString());
 
-      const result = await uploadFireImage(file, userLocation.lat, userLocation.lng);
-      
-      clearInterval(progressInterval);
+      const response = await fetch("http://localhost:8000/detect-fire", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error(`Server responded with ${response.status}`);
+      }
+
+      const result = await response.json();
+
+      // Update UI with real results
       setProcessingProgress(100);
-      
       setDetectionStatus("Complete");
       setFireDetected(result.fireDetected ? "Yes" : "No");
-      
+      setConfidence(result.confidence);
+
       onDetectionComplete(result);
-      
     } catch (error) {
       console.error("Upload error:", error);
       setDetectionStatus("Error");
@@ -90,6 +94,7 @@ export function FileUpload({ userLocation, onDetectionComplete }: FileUploadProp
         setProcessingProgress(0);
         setDetectionStatus("Ready");
         setFireDetected("No");
+        setConfidence(null);
       }, 3000);
     }
   };
@@ -97,7 +102,6 @@ export function FileUpload({ userLocation, onDetectionComplete }: FileUploadProp
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragging(false);
-    
     const files = Array.from(e.dataTransfer.files);
     if (files.length > 0) {
       handleFileSelect(files[0]);
@@ -120,10 +124,11 @@ export function FileUpload({ userLocation, onDetectionComplete }: FileUploadProp
         </h2>
       </CardHeader>
       <CardContent className="space-y-4">
+        {/* Dropzone */}
         <div
           className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors cursor-pointer ${
-            isDragging 
-              ? "border-action-purple bg-purple-50" 
+            isDragging
+              ? "border-action-purple bg-purple-50"
               : "border-gray-300 hover:border-action-purple"
           } ${isProcessing ? "pointer-events-none opacity-50" : ""}`}
           onDragOver={(e) => e.preventDefault()}
@@ -150,24 +155,29 @@ export function FileUpload({ userLocation, onDetectionComplete }: FileUploadProp
           />
         </div>
 
+        {/* Progress */}
         {isProcessing && (
           <div className="space-y-2">
             <Progress value={processingProgress} className="w-full" data-testid="progress-processing" />
             <p className="text-xs text-center text-gray-500">
-              Processing with AI fire detection models...
+              Processing image with AI fire detection...
             </p>
           </div>
         )}
 
+        {/* Status and Results */}
         <div className="space-y-2">
           <div className="flex justify-between text-sm">
             <span className="text-gray-600">AI Processing Status:</span>
-            <span 
+            <span
               className={`font-medium ${
-                detectionStatus === "Complete" ? "text-safe-green" :
-                detectionStatus === "Error" ? "text-emergency-red" :
-                detectionStatus === "Processing..." ? "text-action-purple" :
-                "text-safe-green"
+                detectionStatus === "Complete"
+                  ? "text-safe-green"
+                  : detectionStatus === "Error"
+                  ? "text-emergency-red"
+                  : detectionStatus === "Processing..."
+                  ? "text-action-purple"
+                  : "text-safe-green"
               }`}
               data-testid="text-processing-status"
             >
@@ -176,16 +186,24 @@ export function FileUpload({ userLocation, onDetectionComplete }: FileUploadProp
           </div>
           <div className="flex justify-between text-sm">
             <span className="text-gray-600">Fire Detected:</span>
-            <span 
+            <span
               className={`font-medium ${
-                fireDetected === "Yes" ? "text-emergency-red" :
-                fireDetected === "Failed" ? "text-emergency-red" :
-                fireDetected === "Analyzing..." ? "text-action-purple" :
-                "text-gray-500"
+                fireDetected === "Yes"
+                  ? "text-emergency-red"
+                  : fireDetected === "Failed"
+                  ? "text-emergency-red"
+                  : fireDetected === "Analyzing..."
+                  ? "text-action-purple"
+                  : "text-gray-500"
               }`}
               data-testid="text-fire-detected"
             >
               {fireDetected}
+              {confidence !== null && (
+                <span className="ml-2 text-sm text-gray-600">
+                  ({confidence.toFixed(1)}% confidence)
+                </span>
+              )}
             </span>
           </div>
         </div>

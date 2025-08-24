@@ -198,7 +198,7 @@ export function FireMap({ userLocation, currentDetection }: FireMapProps) {
             </div>
             <div className="text-center">
               <p className="text-2xl font-bold text-action-purple" data-testid="stat-confidence">
-                {currentDetection?.confidence ? Math.round(currentDetection.confidence * 100) : 0}%
+                {currentDetection?.confidence ? Math.round(currentDetection.confidence ) : 0}%
               </p>
               <p className="text-sm text-gray-600">AI Prediction Confidence</p>
             </div>

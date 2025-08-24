@@ -13,6 +13,7 @@ import { getSystemStatus, getFireDetections } from "@/lib/api";
 import { FireDetectionResult, WeatherData, SystemStatus } from "@/types";
 import { Flame, TriangleAlert, Phone } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+// import { sendEmergencyAlerts } from "@/lib/api";
 
 export default function Dashboard() {
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
@@ -52,7 +53,7 @@ export default function Dashboard() {
     refetchInterval: 10000, // Refresh every 10 seconds
   });
 
-  const handleFireDetectionComplete = (result: FireDetectionResult) => {
+  const handleFireDetectionComplete = async (result: FireDetectionResult) => {
     setCurrentDetection(result);
     if (result.weatherData) {
       setWeatherData(result.weatherData);
@@ -61,9 +62,17 @@ export default function Dashboard() {
     if (result.fireDetected) {
       toast({
         title: "🔥 Fire Detected!",
-        description: `Risk Level: ${result.detection?.riskLevel} | Confidence: ${Math.round((result.confidence || 0) * 100)}%`,
+        description: `Risk Level: ${result.detection?.riskLevel} | Confidence: ${Math.round((result.confidence || 0))}%`,
         variant: "destructive",
       });
+      // if (userLocation && currentDetection && currentDetection.fireDetected) {
+      //   await sendEmergencyAlerts({
+      //     location: userLocation,
+      //     confidence: currentDetection.confidence || 0,
+      //     imageUrl: currentDetection.detection?.imageUrl
+      //   });
+      // }
+      console.log("first");
     } else {
       toast({
         title: "✅ No Fire Detected",

@@ -73,3 +73,5 @@ export async function getEmergencyNotifications(fireId: string) {
   const response = await apiRequest('GET', `/api/notifications/${fireId}`);
   return response.json();
 }
+
+

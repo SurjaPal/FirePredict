@@ -30,6 +30,7 @@ export interface FireDetectionResult {
     longitude: number;
     riskLevel: string;
     detectedAt: string;
+    imageUrl?: string;
   };
   weatherData?: WeatherData;
   spreadPrediction?: FireSpreadPrediction;

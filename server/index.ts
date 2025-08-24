@@ -1,10 +1,30 @@
 import express, { type Request, Response, NextFunction } from "express";
+import cors from "cors";
 import { registerRoutes } from "./routes.ts";
 import { setupVite, serveStatic, log } from "./vite.ts";
 
 const app = express();
+
+// CORS Configuration
+const corsOptions = {
+  origin: [
+    'http://localhost:3000',    // React dev server
+    'http://localhost:5000',    // Express server
+    'http://localhost:5173',    // Vite dev server
+    'http://localhost:8000'     // Python Flask server
+  ],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true,
+  maxAge: 86400 // 24 hours
+};
+
+app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+
+// Handle preflight requests
+app.options('*', cors(corsOptions));
 
 app.use((req, res, next) => {
   const start = Date.now();
@@ -39,12 +59,30 @@ app.use((req, res, next) => {
 (async () => {
   const server = await registerRoutes(app);
 
+  // Error handling middleware
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
+    // Set CORS headers on error responses too
+    res.header('Access-Control-Allow-Origin', corsOptions.origin);
+    res.header('Access-Control-Allow-Methods', corsOptions.methods.join(','));
+    res.header('Access-Control-Allow-Headers', corsOptions.allowedHeaders.join(','));
+    res.header('Access-Control-Allow-Credentials', 'true');
+
     const status = err.status || err.statusCode || 500;
     const message = err.message || "Internal Server Error";
+    
+    // Log the error
+    log(`Error: ${status} - ${message}`);
+    console.error(err);
 
-    res.status(status).json({ message });
-    throw err;
+    // Send error response
+    res.status(status).json({
+      error: {
+        message,
+        status,
+        // Include stack trace in development
+        ...(app.get('env') === 'development' && { stack: err.stack })
+      }
+    });
   });
 
   // importantly only setup vite in development and after

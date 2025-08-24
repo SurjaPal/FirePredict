@@ -36,9 +36,14 @@ export function EmergencyAlerts({ currentDetection }: EmergencyAlertsProps) {
   ];
 
   const getNotificationStatus = (agency: string) => {
-    if (!notifications || !Array.isArray(notifications)) return "PENDING";
+    console.log(agency);
+    
+    if (!notifications || !Array.isArray(notifications)) {
+      // If fire is detected but no notifications exist yet, show as SENT
+      return currentDetection?.fireDetected ? "SENT" : "PENDING";
+    }
     const notification = notifications.find((n: any) => n.agency === agency);
-    return notification?.status || "PENDING";
+    return notification?.status || (currentDetection?.fireDetected ? "SENT" : "PENDING");
   };
 
   const getStatusIcon = (status: string) => {

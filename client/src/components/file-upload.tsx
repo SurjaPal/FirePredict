@@ -78,6 +78,58 @@ export function FileUpload({ userLocation, onDetectionComplete }: FileUploadProp
       setFireDetected(result.fireDetected ? "Yes" : "No");
       setConfidence(result.confidence);
 
+      // Send emergency alerts if fire is detected with high confidence
+
+      if(result.fireDetected ) {
+        console.log("Fire detected, preparing to send alerts...");
+        try{
+
+          const res = await fetch("http://localhost:8000/tweet-officials", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              message: `Fire detected at location (${userLocation.lat}, ${userLocation.lng}) with confidence ${result.confidence}%`
+            })
+          })
+        }catch(err){
+          console.error("Error sending tweet to officials:", err);
+        } 
+      }
+
+      if (result.fireDetected && result.confidence > 70) {
+        try {
+          // Send alert to emergency services
+          const alertResponse = await fetch("http://localhost:8000/api/emergency-alert", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                location: userLocation,
+                confidence: result.confidence,
+                imageUrl: result.imageUrl // if available
+              }),
+            });
+
+          if (alertResponse.ok) {
+            toast({
+              title: "Emergency Alert Sent",
+              description: "Emergency services have been notified of the fire detection.",
+              variant: "default",
+            });
+          }
+        } catch (alertError) {
+          console.error("Failed to send emergency alert:", alertError);
+          toast({
+            title: "Alert Notification Failed",
+            description: "Could not notify emergency services. Please contact them directly.",
+            variant: "destructive",
+          });
+        }
+      }
+
       onDetectionComplete(result);
     } catch (error) {
       console.error("Upload error:", error);
@@ -90,12 +142,10 @@ export function FileUpload({ userLocation, onDetectionComplete }: FileUploadProp
       });
     } finally {
       setIsProcessing(false);
-      setTimeout(() => {
-        setProcessingProgress(0);
-        setDetectionStatus("Ready");
-        setFireDetected("No");
-        setConfidence(null);
-      }, 3000);
+      setProcessingProgress(0);
+      // Reset the file input so the same file can be uploaded again
+      const fileInput = document.getElementById("file-input") as HTMLInputElement;
+      if (fileInput) fileInput.value = "";
     }
   };
 
@@ -131,11 +181,14 @@ export function FileUpload({ userLocation, onDetectionComplete }: FileUploadProp
               ? "border-action-purple bg-purple-50"
               : "border-gray-300 hover:border-action-purple"
           } ${isProcessing ? "pointer-events-none opacity-50" : ""}`}
-          onDragOver={(e) => e.preventDefault()}
-          onDragEnter={() => setIsDragging(true)}
+          onDragOver={(e) => {
+            e.preventDefault();
+            if (!isProcessing) setIsDragging(true);
+          }}
+          onDragEnter={() => !isProcessing && setIsDragging(true)}
           onDragLeave={() => setIsDragging(false)}
-          onDrop={handleDrop}
-          onClick={() => document.getElementById("file-input")?.click()}
+          onDrop={(e) => !isProcessing && handleDrop(e)}
+          onClick={() => !isProcessing && document.getElementById("file-input")?.click()}
           data-testid="dropzone-upload"
         >
           <CloudUpload className="mx-auto text-4xl text-gray-400 mb-4" />
@@ -206,6 +259,23 @@ export function FileUpload({ userLocation, onDetectionComplete }: FileUploadProp
               )}
             </span>
           </div>
+          
+          {/* Reset Button */}
+          {(fireDetected !== "No" || detectionStatus !== "Ready") && (
+            <div className="mt-4 flex justify-center">
+              <button
+                onClick={() => {
+                  setProcessingProgress(0);
+                  setDetectionStatus("Ready");
+                  setFireDetected("No");
+                  setConfidence(null);
+                }}
+                className="px-4 py-2 text-sm text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50"
+              >
+                Clear Results
+              </button>
+            </div>
+          )}
         </div>
       </CardContent>
     </Card>

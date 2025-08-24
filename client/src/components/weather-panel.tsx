@@ -75,7 +75,7 @@ export function WeatherPanel({ userLocation, weatherData, currentDetection, onUp
   return (
     <div className="space-y-6">
       {/* Weather Analysis */}
-      <Card className="bg-white shadow-lg" data-testid="card-weather-analysis">
+      {/* <Card className="bg-white shadow-lg" data-testid="card-weather-analysis">
         <CardHeader>
           <h2 className="text-lg font-semibold text-gray-900 flex items-center">
             <CloudSun className="text-alert-orange mr-2" />
@@ -128,7 +128,9 @@ export function WeatherPanel({ userLocation, weatherData, currentDetection, onUp
             </div>
           )}
         </CardContent>
-      </Card>
+      </Card> */}
+  
+  
 
       {/* Location & Risk Assessment */}
       <Card className="bg-white shadow-lg" data-testid="card-location-risk">

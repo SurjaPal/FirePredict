@@ -7,12 +7,31 @@ const app = express();
 
 // CORS Configuration
 const corsOptions = {
-  origin: [
-    'http://localhost:3000',    // React dev server
-    'http://localhost:5000',    // Express server
-    'http://localhost:5173',    // Vite dev server
-    'http://localhost:8000'     // Python Flask server
-  ],
+  origin: function(origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) {
+    const allowedOrigins = [
+      'http://localhost:3000',    // React dev server
+      'http://localhost:5000',    // Express server
+      'http://localhost:5173',    // Vite dev server
+      'http://localhost:8000',    // Python Flask server
+    ];
+    
+    // Add production URLs if they exist
+    if (process.env.RENDER_EXTERNAL_URL) {
+      allowedOrigins.push(process.env.RENDER_EXTERNAL_URL);
+    }
+    if (process.env.FRONTEND_URL) {
+      allowedOrigins.push(process.env.FRONTEND_URL);
+    }
+
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true,
@@ -62,10 +81,17 @@ app.use((req, res, next) => {
   // Error handling middleware
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     // Set CORS headers on error responses too
-    res.header('Access-Control-Allow-Origin', corsOptions.origin);
-    res.header('Access-Control-Allow-Methods', corsOptions.methods.join(','));
-    res.header('Access-Control-Allow-Headers', corsOptions.allowedHeaders.join(','));
-    res.header('Access-Control-Allow-Credentials', 'true');
+    // Let the cors middleware handle the CORS headers
+    if (_req.headers.origin) {
+      corsOptions.origin(_req.headers.origin, (err, allowed) => {
+        if (allowed) {
+          res.header('Access-Control-Allow-Origin', _req.headers.origin);
+          res.header('Access-Control-Allow-Methods', corsOptions.methods.join(','));
+          res.header('Access-Control-Allow-Headers', corsOptions.allowedHeaders.join(','));
+          res.header('Access-Control-Allow-Credentials', 'true');
+        }
+      });
+    }
 
     const status = err.status || err.statusCode || 500;
     const message = err.message || "Internal Server Error";
